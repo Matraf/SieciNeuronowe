@@ -1,94 +1,101 @@
-import copy
 import math
 
-C = 0.1
-E = 0.000001
-B = 1.0
+c = 1.0
+epsilon = 0.001
+beta = 1.25
 
-u = [[0, 0, 1],
-     [1, 0, 1],
-     [0, 1, 1],
-     [1, 1, 1]]
-x = [[0.0, 0.0, 1.0],
-     [0.0, 0.0, 1.0],
-     [0.0, 0.0, 1.0],
-     [0.0, 0.0, 1.0]]
-w = [[0.0, 1.0, 2.0],
+u = [[0.0, 0.0, 1.0],
+     [0.0, 1.0, 1.0],
+     [1.0, 0.0, 1.0],
+     [1.0, 1.0, 1.0]]
+Z = [0.0, 1.0, 1.0, 0.0]
+
+W = [[0.0, 1.0, 2.0],
      [0.0, 1.0, 2.0]]
-w_new = [[0.0, 0.0, 0.0],
-         [0.0, 0.0, 0.0]]
-s = [0.0, 1.0, 2.0]
-s_new = [0.0, 0.0, 0.0]
-y = [0.0, 0.0, 0.0, 0.0]
-z = [0.0, 1.0, 1.0, 0.0]
 
-de_s = [0, 0, 0]
-de_w = [[0, 0, 0],
-        [0, 0, 0]]
+X = [3.0, 3.0, 1.0]
+s = [0, 1, 2]
 
+def f(x):
+    return 1/(1 + math.pow(math.e, -beta * x))
 
-def f(_):
-    try:
-        return 1 / (1 + math.exp(- B * _))
-    except OverflowError:
-        return float('inf')
+def vp():
+    return s[0] * X[0] + s[1] * X[1] + s[2] * X[2]
 
+def Df(x):
+    return beta * f(x) * (1 - f(x))
 
-def df(param):
-    t = f(param)
-    return B * t * (1 - t)
+def newS(_s):
+    s_new = [0.0, 0.0, 0.0]
+    for i in range (0, len(s)):
+        s_new[i] = s[i] - c * Es(i)
+    
+    return s_new
 
+def newW(w):
+    w_new = [[0.0, 0.0, 0.0],
+             [0.0, 0.0, 0.0]]
+    
+    for i in range(0, 2):
+        for j in range(0, 3):
+            w_new[i][j] = w[i][j] - c * Ew(i, j)
+    return w_new
 
-def evaluate_de_s(ii):
-    de_s[ii] = 0
-    for p in [0, 1, 2, 3]:
-        de_s[ii] = de_s[ii] + (y[p] - z[p]) * df(s[0] * x[p][0] + s[1] * x[p][1] + s[2] * x[p][2]) * x[p][ii]
+def newX(index):
+    for i in range(0, len(X)-1):
+        X[i] = f(W[i][0] * u[index][0] + W[i][1] * u[index][1] + W[i][2])
 
+def Fp(index):
+    newX(index)
+    return vp()
 
-def calculate_de_w(ii, jj):
-    de_w[ii][jj] = 0
-    for p in [0, 1, 2, 3]:
-        de_w[ii][jj] = de_w[ii][jj] + (y[p] - z[p]) * df(s[0] * x[p][0] + s[1] * x[p][1] + s[2] * x[p][2]) * s[ii] * df(
-            w[ii][0] * u[p][0] + w[ii][1] * u[p][1] + w[ii][2] * u[p][2]) * u[p][jj]
+def _max(_s, sp, w, wp):
+    maximum = 0
+    for k in range(0, len(_s)):
+        sa = abs(sp[k] - _s[k])
+        for l in range(0, len(w)):
+            wa = abs(wp[l][k] - w[l][k])
+            if wa >= maximum:
+                maximum = wa
+        if sa >= maximum:
+            maximum = sa
+    return maximum
 
+def Es(index):
+    _sum = 0
+    for i in range(0, len(Z)):
+        x = Fp(i)
+        y = f(x)
+        _sum += ((y - Z[i]) * Df(vp()) * X[index])
+    return _sum
 
-def evaluate_x():
-    for p in [0, 1, 2, 3]:
-        for i_ in [0, 1]:
-            x[p][i_] = f(w[i_][0] * u[p][i_] + w[i_][1] * u[p][i_] + w[i_][2] * u[p][i_])
-
-
-def evaluate_y():
-    for p in [0, 1, 2, 3]:
-        y[p] = f(s[0] * x[p][0] + s[1] * x[p][1] + s[2] * x[p][2])
-
+def Ew(wi, wj):
+    _sum = 0
+    for i in range(0, len(Z)):
+        newX(i)
+        x = Fp(i)
+        y = f(x)
+        temp = W[wi][0] * u[i][0] + W[wi][1] * u[i][1] + W[wi][2]
+        _sum += (y - Z[i]) * Df(vp()) * s[wi] * Df(temp) * u[i][wj]
+    return _sum
 
 def back_propagation():
-    global s, w
+    global s, W
+    _maximum = 0
     while True:
-        max_ = -999
-        evaluate_x()
-        evaluate_y()
-        for i in [0, 1, 2]:
-            evaluate_de_s(i)
-            s_new[i] = s[i] - C * de_s[i]
-            if abs(s_new[i] - s[i]) > max_:
-                max_ = abs(s_new[i] - s[i])
-        for i in [0, 1]:
-            for j in range(2):
-                calculate_de_w(i, j)
-                w_new[i][j] = w[i][j] - C * de_w[i][j]
-                if abs(w_new[i][j] - w[i][j]) > max_:
-                    max_ = abs(w_new[i][j] - w[i][j])
-        if max_ < E:
+        s_new = newS(s)
+        w_new = newW(W)
+        _maximum = _max(s, s_new, W, w_new)
+        s = s_new.copy()
+        W = w_new.copy()
+        print(_maximum)
+        if _maximum <= epsilon:
             break
-        s = copy.deepcopy(s_new)
-        w = copy.deepcopy(w_new)
-
-    print(w)
+    print(X)
+    print(W)
     print(s)
-    for i in range(4):
-        print(y[i])
+    for i in range(0, 4):
+        print("y[" + str(i) + "] = " + str(f(Fp(i))))
 
 
 if __name__ == '__main__':
