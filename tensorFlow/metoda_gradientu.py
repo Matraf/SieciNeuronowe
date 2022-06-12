@@ -18,7 +18,7 @@ def function(X, Y):
 X, Y = init()
 min = function(X.numpy(), Y.numpy())
 for i in range(5):
-    optimizer = tf.optimizers.SGD(learning_rate=0.1, momentum=0.99)
+    optimizer = tf.optimizers.SGD(learning_rate=0.001, momentum=0.90)
     for epoch in range(1000):
         optimizer.minimize(lambda: function(X, Y), var_list=[X, Y])
         print(function(X, Y).numpy(), X.numpy(), Y.numpy(), end="\r")
