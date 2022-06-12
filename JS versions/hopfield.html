@@ -1,0 +1,169 @@
+<html>
+  <head>
+    <script src="./dataCNN.js"></script>
+    <style>
+      .container {
+      }
+      .board {
+        display: flex;
+        flex-direction: column;
+        margin: 20px;
+      }
+      .title {
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      .row {
+        display: flex;
+      }
+      .row div {
+        height: 30px;
+        width: 30px;
+        line-height: 30px;
+        text-align: center;
+        border: 1px solid black;
+        margin: 1px;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .row div.black {
+        background-color: black;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container"></div>
+  </body>
+  <script>
+    const { random, round } = Math;
+
+    const randomX = () => round(random());
+    const sum = (arr) => arr.reduce((prev, curr) => prev + curr, 0);
+
+    const n = 25;
+
+    let x = Array.from({ length: n }, randomX);
+    let u = new Array(n).fill(0);
+
+    const z = [
+      0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+    ];
+    const zPrim = [
+      0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0,
+    ];
+
+    const c = Array.from({ length: n }, () => new Array(n).fill(0));
+    const d = Array.from({ length: n }, () => new Array(n).fill(0));
+    const w = Array.from({ length: n }, () => new Array(n).fill(0));
+    const wPrim = Array.from({ length: n }, () => new Array(n).fill(0));
+    const theta = new Array(n).fill(0);
+    const thetaPrim = new Array(n).fill(0);
+
+    const calcCD = () => {
+      for (let i = 0; i < 25; i++) {
+        for (let j = 0; j < 25; j++) {
+          const cValue = (z[i] - 0.5) * (z[j] - 0.5);
+          const dValue = (zPrim[i] - 0.5) * (zPrim[j] - 0.5);
+          c[i][j] = i != j ? cValue : 0;
+          d[i][j] = i != j ? dValue : 0;
+        }
+      }
+    };
+
+    const calcW = () => {
+      for (let i = 0; i < 25; i++) {
+        for (let j = 0; j < 25; j++) {
+          w[i][i] = 2 * c[i][j];
+          wPrim[i][j] = 2 * (c[i][j] + d[i][j]);
+        }
+      }
+    };
+
+    const calcTheta = () => {
+      for (let i = 0; i < 25; i++) {
+        theta[i] = sum(c[i]);
+        thetaPrim[i] = sum([...c[i], ...d[i]]);
+      }
+    };
+
+    const calcU = (task) => {
+      if (task == 1) {
+        for (let i = 0; i < n; i++) {
+          let sumTemp = 0;
+          for (let j = 0; j < n; j++) sumTemp += w[i][j] * x[j];
+          u[i] = sumTemp - theta[i];
+        }
+      } else {
+        for (let i = 0; i < n; i++) {
+          let sumTemp = 0;
+          for (let j = 0; j < n; j++) sumTemp += wPrim[i][j] * x[j];
+          u[i] = sumTemp - thetaPrim[i];
+        }
+      }
+    };
+
+    const calcX = (step, task) => {
+      if (step !== 0) {
+        calcU(task);
+        for (let i = 0; i < n; i++) {
+          if (u[i] < 0) x[i] = 0;
+          else if (u[i] > 0) x[i] = 1;
+        }
+      }
+    };
+
+    const calcParams = () => {
+      calcCD();
+      calcW();
+      calcTheta();
+    };
+
+    const resetX = () => {
+      x = Array.from({ length: n }, randomX);
+      u = new Array(n).fill(0);
+    };
+
+    const showX = (placeholder) => {
+      const container = document.querySelector('.container');
+      const board = container.appendChild(document.createElement('div'));
+      board.classList.add('board');
+      const title = board.appendChild(document.createElement('div'));
+      title.classList.add('title');
+      title.textContent = placeholder;
+      let row = board.appendChild(document.createElement('div'));
+      let block;
+      row.classList.add('row');
+      for (let j = 0; j < n; j++) {
+        block = row.appendChild(document.createElement('div'));
+        block.textContent = x[j];
+        block.classList.add(x[j] ? 'black' : 'white');
+        if ((j + 1) % 5 == 0) {
+          row = board.appendChild(document.createElement('div'));
+          row.classList.add('row');
+        }
+      }
+    };
+
+    const hopfieldNetwork = () => {
+      let t = 0;
+      calcParams();
+      console.log('===== HOPFIELD NETWORK =====');
+      for (let task = 1; task < 3; task++) {
+        resetX();
+        console.log(`--- TASK ${task} ---`);
+        for (let i = 0; i < 3; i++) {
+          calcX(t, task);
+          showX(`Step: ${t}`);
+          t += 1;
+        }
+        t = 0;
+      }
+    };
+
+    setInterval(() => {
+      document.querySelector('.container').innerHTML = '';
+      hopfieldNetwork();
+    }, 500);
+  </script>
+</html>

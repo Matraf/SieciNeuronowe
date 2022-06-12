@@ -1,0 +1,138 @@
+<script>
+  const { abs, E, pow } = Math;
+
+  //constant
+  const c = 3.0;
+  const epsilon = 0.005;
+  const beta = 2.0;
+  const N = 2;
+
+  const u = [[0.0, 0.0, 1.0],
+             [0.0, 1.0, 1.0],
+             [1.0, 0.0, 1.0],
+             [1.0, 1.0, 1.0]]
+  const Z = [0.0, 1.0, 1.0, 0.0]
+  const X = [3.0, 3.0, 1.0] 
+
+  const randomValue = (min, max) => {
+    return Math.random() * (max - min + 1) + min
+  }
+
+  const initValue = (isRandom) => {
+    if(isRandom) {
+      let W = [[0, 0, 0], [0, 0, 0]]
+      let s = [0, 0, 0];
+      for(let i = 0; i < 2; i++) {
+        for(let j = 0; j < 3; j++) {
+          W[i][j] = randomValue(-N, N);
+        }
+      }
+      for(let i = 0; i < 3; i++) {
+        s[i] = randomValue(-N, N);
+      }
+      return {W, s}
+    }
+    let W = [[0.0, 1.0, 2.0], [0.0, 1.0, 2.0]]
+    let s = [0, 1, 2] 
+    return {W, s}
+  }
+
+  let {W, s} = initValue(false);
+
+  const f = (value) => 1 / (1 + pow(E, -beta * value));
+  const Df = (value) => beta * f(value) * (1 - f(value));
+
+  const mixSX = () => s[0] * X[0] + s[1] * X[1] + s[2] * X[2]
+
+  const calculateNewS = () => {
+    const s_new = [0.0, 0.0, 0.0]
+    for(let i = 0; i < s.length; i++){
+      s_new[i] = s[i] - c * calculateDES(i)
+    }
+    return s_new
+  }
+
+  const calculateNewW = () => {
+    const w_new = [[0.0, 0.0, 0.0],
+             [0.0, 0.0, 0.0]]
+    for(let i = 0; i < 2; i++) {
+      for(let j = 0; j < 3; j++) {
+        w_new[i][j] = W[i][j] - c * calculateDEW(i, j)
+      }
+    }
+    return w_new
+  }
+
+  const newX = (index) => {
+    for(let i = 0; i < X.length - 1; i++) {
+      X[i] = f(W[i][0] * u[index][0] + W[i][1] * u[index][1] + W[i][2])
+    }
+  }
+
+  const calculateMax = (sNew, wNew) => {
+    let max = 0
+    for(let k = 0; k < s.length; k++) {
+      const diffS = abs(sNew[k] - s[k]);
+      for(let l = 0; l < W.length; l++) {
+        const diffW = abs(wNew[l][k] - W[l][k]);
+        if(diffW >= max) max = diffW;
+      }
+      if(diffS >= max) max = diffS;
+    }
+    return max
+  }
+
+  const calculateDES = (index) => {
+    return Z.reduce((prev, curr, i) => {
+      newX(i);
+      const x = mixSX();
+      const y = f(x);
+      return prev + ((y - curr) * Df(x) * X[index])
+    }, 0)
+  }
+  
+  const calculateDEW = (wi, wj) => {
+    return Z.reduce((prev, curr, i) => {
+      newX(i);
+      const x = mixSX();
+      const y = f(x);
+      const temp = W[wi][0] * u[i][0] + W[wi][1] * u[i][1] + W[wi][2];
+      return prev + (y - curr) * Df(x) * s[wi] * Df(temp) * u[i][wj];
+    }, 0)
+  }
+
+  const showY = () => {
+    const y = [];
+    for(let i = 0; i < 4; i++) {
+      newX(i);
+      y.push(f(mixSX()));
+    }
+    return y;
+  }
+
+  const showData = (step) => {
+    console.log("-----------------------------------------------------------------");
+    console.log("Step: " + step);
+    console.log("W: " +  W);
+    console.log("S: " + s);
+    console.log("Y: " + showY());
+  }
+
+  const backPropagation = () => {
+    let max;
+    let step = 0;
+    while(true) {
+      step++;
+      if(step === 1) showData(step);
+      const newS = calculateNewS();
+      const newW = calculateNewW();
+      max = calculateMax(newS, newW);
+      s = JSON.parse(JSON.stringify(newS));
+      W = JSON.parse(JSON.stringify(newW));
+      if(max <= epsilon) break;
+    }
+    showData(step);
+  }
+
+  backPropagation();
+</script>

@@ -1,0 +1,192 @@
+<html>
+  <head>
+    <script src="./dataCNN.js"></script>
+    <style>
+      .container {
+
+      }
+      .board {
+        display: flex;
+        flex-direction: column;
+        margin: 20px;
+      }
+      .title {
+        font-weight: 600;
+        margin-bottom: 10px
+      }
+      .row {
+        display: flex;
+      }
+      .row div {
+        height: 30px;
+        width: 30px;
+        line-height: 30px;
+        text-align: center;
+        border: 1px solid black;
+        margin: 1px;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .row div.black {
+        background-color: black;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+    </div>
+    <script>
+      const readValue = (i, j, data) => {
+          const tuple = `[${i}, ${j}]`;
+          const value = data[tuple];
+          return value || 0;
+      }
+    
+      const setValue = (i, j, data, value) => {
+        const tuple = `[${i}, ${j}]`;
+        data[tuple] = value;
+      }
+    
+      const changeUValues = (first, second) => {
+        for(let index = 0; index < 5; index++) {
+          for(let i = 1; i <= 5; i++) {
+            for(let j = 1; j <= 5; j++) {
+              if(readValue(i, j, u[index]) === 0) setValue(i, j, u[index], second);
+              else setValue(i, j, u[index], first)
+            }
+          }
+        }
+      }
+    
+      const changeWValues = (first, second) => {
+        for(let index = 0; index < 4; index++) {
+          for(let i = -1; i <= 1; i++) {
+            for(let j = -1; j <= 1; j++) {
+              if(readValue(i, j, w[index]) === 0) setValue(i, j, w[index], second);
+              else setValue(i, j, w[index], first)
+            }
+          }
+        }
+      }
+    
+      const threshold = (x) => x > 0 ? 1 : 0; 
+    
+      const countUW = (i, j, u, w) => {
+        let sum = 0;
+        for(let ii = -1; ii <= 1; ii++) {
+          for(let jj = -1; jj <= 1; jj++) {
+            sum += readValue(ii, jj, w) * readValue(i - ii, j - jj, u);
+          }
+        }
+        return threshold(sum);
+      }
+    
+      const convolution = (u, w) => {
+        const X = {};
+        for(let i = 1; i <= 5; i++) {
+          for(let j = 1; j <= 5; j++) {
+            setValue(i, j, X, countUW(i, j, u, w));
+          }
+        }
+        return X;
+      }
+    
+      const allConvolution = () => {
+        for(let i = 0; i < 5; i++){
+          for(let j = 0; j < 4; j++) {
+            showX(convolution(u[i], w[j]), `X = U${i + 1} * W${j + 1}`);
+          }
+        }
+      }
+    
+      const threshold_2 = (x) => x > 0.5 ? 1 : 0;
+    
+      const countP = (i, j) => {
+        let P = []
+        for(k = 0; k <= 3; k++) {
+          for(l = 0; l <= 3; l++) {
+            P.push([i + k, j + l])
+          }
+        }
+        return P;
+      }
+    
+      const countYValue = (i, j, X) => {
+        const P = countP(i, j);
+        // console.log(P);
+        const value = 1/16 * P.reduce((prev, curr, index) => 
+          prev + readValue(curr[0], curr[1], X), 0
+        )
+        // console.log(value);
+        return value;
+      }
+    
+      const pooling = (X) => {
+        let Y = {}
+        for(let i = 1; i <= 2; i++) {
+          for(let j = 1; j <= 2; j++) {
+            setValue(i, j, Y, threshold_2(countYValue(i, j, X)))
+          }
+        }
+        return Y;
+      }
+    
+      const allPooling = () => {
+        for(let i = 0; i < 5; i++){
+          for(let j = 0; j < 4; j++) {
+            showY(pooling(convolution(u[i], w[j])), i, j)
+          }
+        }
+      }
+      
+      const showY = (data, x, y) => {
+        const container = document.querySelector('.container');
+        const board = container.appendChild(document.createElement('div'))
+        board.classList.add('board');
+        const title = board.appendChild(document.createElement('div'))
+        title.classList.add('title')
+        title.textContent = `Y(U${x + 1}, W${y + 1}`;
+        let row = board.appendChild(document.createElement('div'))
+        let block;
+        row.classList.add('row');
+        for(let i = 1; i <= 2; i++) {
+          for(let j = 1; j <= 2; j++) {
+            const value = readValue(i, j, data);
+            block = row.appendChild(document.createElement('div'))
+            block.textContent = value
+            block.classList.add(value ? 'black' : 'white')
+          }
+          row = board.appendChild(document.createElement('div'))
+          row.classList.add('row');
+        }
+      }
+
+      const showX = (data, placeholder) => {
+        const container = document.querySelector('.container');
+        const board = container.appendChild(document.createElement('div'))
+        board.classList.add('board');
+        const title = board.appendChild(document.createElement('div'))
+        title.classList.add('title')
+        title.textContent = placeholder;
+        let row = board.appendChild(document.createElement('div'))
+        let block;
+        row.classList.add('row');
+        for(let i = 1; i <= 5; i++) {
+          for(let j = 1; j <= 5; j++) {
+            const value = readValue(i, j, data);
+            block = row.appendChild(document.createElement('div'))
+            block.textContent = value
+            block.classList.add(value ? 'black' : 'white')
+          }
+          row = board.appendChild(document.createElement('div'))
+          row.classList.add('row');
+        }
+      }
+      
+      allConvolution();
+      allPooling();
+    </script>
+  </body>
+</html>
+

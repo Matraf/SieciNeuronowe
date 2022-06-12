@@ -1,0 +1,57 @@
+<script>
+  dot = function(a,b) {
+    return a.map(function(x,i) {
+      return a[i] * b[i];
+    }).reduce(function(m,n) { return m + n; });
+  }
+
+
+  const z0 = [-1.0, -1.0, -1.0, -1.0, -1.0,
+              -1.0, 1.0, 1.0, 1.0, -1.0,
+              -1.0, 1.0, -1.0, 1.0, -1.0,
+              -1.0, 1.0, 1.0, 1.0, -1.0,
+              -1.0, -1.0, -1.0, -1.0, -1.0]
+
+  const z1 = [-1.0, -1.0, -1.0, -1.0, -1.0,
+              -1.0, 1.0, 1.0, -1.0, -1.0,
+              -1.0, -1.0, 1.0, -1.0, -1.0,
+              -1.0, -1.0, 1.0, -1.0, -1.0,
+              -1.0, -1.0, -1.0, -1.0, -1.0]
+
+  const z2 = [-1.0, 1.0, 1.0, 1.0, -1.0,
+              -1.0, 1.0, -1.0, 1.0, -1.0,
+              -1.0, 1.0, -1.0, 1.0, -1.0,
+              -1.0, 1.0, 1.0, 1.0, -1.0,
+              -1.0, -1.0, -1.0, -1.0, -1.0]
+
+  const z3 = [-1.0, -1.0, 1.0, -1.0, -1.0,
+              -1.0, -1.0, 1.0, -1.0, -1.0,
+              -1.0, -1.0, 1.0, -1.0, -1.0,
+              -1.0, -1.0, 1.0, -1.0, -1.0,
+              -1.0, -1.0, -1.0, -1.0, -1.0]
+
+  const W = Array.from({length: 25}, e => Array(25).fill(0.0));
+
+  for(let i = 0; i < 25; i++){
+    for(let j = 0; j < 25; j++) {
+      W[i][j] = (z0[i]*z0[j])/25 + (z1[i]*z1[j])/25
+    }
+  }
+
+  const association = (u) => {
+    u = W.map(w => dot(w, u));
+    u = u.map(_u => _u < 0 ? -1 : 1);
+    let map = '';
+    u.forEach((_u, index) => {
+      if(!(index % 5)) map += "\n";
+      if(_u == 1) map += "\u25A0";
+      else map += '_'
+    })
+    return map + '\n\n\n';
+  }
+
+  console.log(association(z0));
+  console.log(association(z1));
+  console.log(association(z2));
+  console.log(association(z3));
+</script>

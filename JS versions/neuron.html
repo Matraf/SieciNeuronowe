@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>McCulloch</title>
+  <style>
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>McCulloch</h2>
+    <div>
+      <label for="u1">u1 = </label>
+      <select name="u1" id="u1">
+        <option value="0">0</option>
+        <option value="1">1</option>
+      </select>
+    </div>
+    <div>
+      <label for="u2">u2 = </label>
+      <select name="u2" id="u2">
+        <option value="0">0</option>
+        <option value="1">1</option>
+      </select>
+    </div>
+    <div>
+      <label for="logic">Bramki logiczne: </label>
+      <select name="logic" id="logic">
+          <option value="AND">AND</option>
+          <option value="NAND">NAND</option>
+          <option value="OR">OR</option>
+          <option value="NOT">NOT</option>
+      </select>
+    </div>
+    <div>
+      <button id="check">check</button>
+    </div>
+    <div style="color:green;font-weight:600;">
+      Wynik: <span id="result"></span>
+    </div>
+  </div>
+  <script>
+    const weights = {
+        "NOT": [-2.0, 1.0],
+        "AND": [2.0, 2.0, -3.0],
+        "NAND": [-0.5, -0.8, 1.0],
+        "OR": [2.0, 2.0, -1.0]
+    };
+
+    const neuron = (u, type) => {
+      const w = weights[type];
+      u.push(1);
+      const y = u.reduce((acc, curr, index) => {
+        return acc + ( curr * w[index]);
+      }, 0);
+      return 1 * (y > 0);
+    }
+
+    const showResult = (u1, u2, type) => result.textContent = neuron([parseFloat(u1), parseFloat(u2)], type);
+
+    const u1 = document.getElementById("u1")
+    const u2 = document.getElementById("u2")
+    const logic = document.getElementById("logic")
+    const button = document.getElementById("check")
+    const result = document.getElementById("result")
+
+    logic.addEventListener('change', (e) => {
+      if(e.target.value === "NOT") u2.parentElement.style.display = "none";
+      else u2.parentElement.style.display = "block";
+    });
+
+    button.addEventListener('click', (e) => showResult(u1.value, u2.value, logic.value))
+  </script>
+</body>
+</html>

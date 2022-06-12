@@ -1,0 +1,39 @@
+<script>
+  const random = (min, max) => {
+    const num = Math.floor(Math.random() * (max + 1 - min) + min);
+    if (num === 1) return random(min, max);
+    return num;
+  };
+
+  const GCD = (a, b) => {
+    if (a % b === 0) return b;
+    return GCD(b, a % b);
+  };
+
+  const factorization = (N) => {
+    const t = N ** 2;
+    while (true) {
+      const a = random(1, N);
+
+      let tempGCD = GCD(N, a);
+      if (tempGCD > 1) return tempGCD;
+
+      let r = 0;
+      while ((a ** r - 1) % N === 0 && a ** r < t) {
+        r = r + 1;
+      }
+
+      if (GCD(N, a ** (r / 2) - 1) > 1) return tempGCD;
+      if (GCD(N, a ** (r / 2) + 1) > 1) return tempGCD;
+    }
+  };
+
+  console.log(`12 has factor = ${factorization(12)}`);
+  console.log(`57 has factor = ${factorization(57)}`);
+  console.log(`91 has factor = ${factorization(91)}`);
+  console.log(`143 has factor = ${factorization(143)}`);
+  console.log(`1737 has factor = ${factorization(1737)}`);
+  console.log(`1859 has factor = ${factorization(1859)}`);
+  console.log(`13843 has factor = ${factorization(13843)}`);
+  console.log(`988027 has factor = ${factorization(988027)}`);
+</script>

@@ -1,0 +1,132 @@
+<html>
+  <head>
+    <style>
+      .container {
+      }
+      .board {
+        display: flex;
+        flex-direction: column;
+        margin: 20px;
+      }
+      .title {
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      .row {
+        display: flex;
+      }
+      .row div {
+        height: 30px;
+        width: 30px;
+        line-height: 30px;
+        text-align: center;
+        border: 1px solid black;
+        margin: 2px;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .row div.black {
+        background-color: black;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container"></div>
+    <script>
+      const { random, round } = Math;
+
+      const randomX = () => random();
+      const sum = (arr) => arr.reduce((prev, curr) => prev + curr, 0);
+      const fx = (ui) => 1 / (1 + Math.exp(-ui / T));
+
+      const n = 25;
+      const T = 2;
+
+      let x = Array.from({ length: n }, randomX);
+      let u = new Array(n).fill(0);
+
+      const theta = new Array(n).fill(0);
+      const c = Array.from({ length: n }, () => new Array(n).fill(0));
+      const w = Array.from({ length: n }, () => new Array(n).fill(0));
+
+      const z = [
+        0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+        0,
+      ];
+
+      const calcC = () => {
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            if (i !== j) c[i][j] = (z[i] - 0.5) * (z[j] - 0.5);
+            else c[i][j] = 0;
+          }
+        }
+      };
+
+      const calcW = () => {
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) w[i][j] = 2 * c[i][j];
+        }
+      };
+
+      const calcTheta = () => {
+        for (let i = 0; i < n; i++) theta[i] = sum(c[i]);
+      };
+
+      const calcU = (i) => {
+        for (let i = 0; i < n; i++) {
+          let sum = 0;
+          for (let j = 0; j < n; j++) {
+            sum += w[i][j] * x[j];
+          }
+          u[i] = sum - theta[i];
+        }
+      };
+
+      const calcX = () => {
+        calcU();
+        for (let i = 0; i < n; i++) {
+          if (random() <= fx(u[i])) x[i] = 1;
+          else x[i] = 0;
+        }
+      };
+
+      const showX = (placeholder) => {
+        const container = document.querySelector('.container');
+        const board = container.appendChild(document.createElement('div'));
+        board.classList.add('board');
+        const title = board.appendChild(document.createElement('div'));
+        title.classList.add('title');
+        title.textContent = placeholder;
+        let row = board.appendChild(document.createElement('div'));
+        let block;
+        row.classList.add('row');
+        for (let j = 0; j < n; j++) {
+          calcX();
+          block = row.appendChild(document.createElement('div'));
+          block.textContent = x[j];
+          block.classList.add(x[j] ? 'black' : 'white');
+          if ((j + 1) % 5 == 0) {
+            row = board.appendChild(document.createElement('div'));
+            row.classList.add('row');
+          }
+        }
+      };
+      let image = 1;
+
+      const boltzmann = () => {
+        calcC();
+        calcW();
+        calcTheta();
+        showX();
+      };
+
+      setInterval(() => {
+        document.querySelector('.container').innerHTML = '';
+        boltzmann();
+        console.log('Rysuje');
+      }, 100);
+    </script>
+  </body>
+</html>

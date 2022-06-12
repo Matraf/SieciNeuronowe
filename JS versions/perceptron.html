@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    const u1 = 
+    [
+      0, 0, 0, 0, 0,
+      0, 1, 1, 1, 0,
+      0, 1, 0, 1, 0,
+      0, 1, 1, 1, 0,
+      0, 0, 0, 0, 0, 1
+    ]
+
+    const u2 = 
+    [
+      0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0,
+      1, 1, 1, 0, 0,
+      1, 0, 1, 0, 0,
+      1, 1, 1, 0, 0, 1
+    ]
+
+    const u3 = 
+    [ 
+      0, 0, 0, 0, 0,
+      0, 1, 1, 0, 0,
+      0, 0, 1, 0, 0,
+      0, 0, 1, 0, 0,
+      0, 0, 1, 0, 0, 1
+    ]
+
+    const u4 = 
+    [
+      0, 0, 1, 1, 0,
+      0, 0, 0, 1, 0,
+      0, 0, 0, 1, 0,
+      0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 1
+    ]
+
+    const u5 = 
+    [
+      0, 0, 0, 0, 0,
+      1, 1, 0, 0, 0,
+      0, 1, 0, 0, 0,
+      0, 1, 0, 0, 0,
+      0, 1, 0, 0, 0, 1
+    ]
+
+    u = [u1, u2, u3, u4, u5]
+
+    const f = (w, t) => {
+      return u[t % 5].reduce((acc, curr, index) => {
+        return acc + w[index] * u[(t % 5)][index]
+      }, 0) >= 0;
+    } 
+
+    const perceptron = (c) => {
+      const w = Array(26).fill(1);
+      let t = 0;
+      let counter = 0;
+      while(counter != 5) {
+        const z = +((t % 5) > 2);
+        const y = f(w, t);
+        for(let i = 0; i < u[t % 5].length; i++) {
+          w[i] = w[i] + c * (z - y) * u[t % 5][i];
+        }
+        counter = z == y ? counter + 1 : 0;
+        t++;
+      }
+      return {t: t+1, w};
+    }
+    console.log("1.0: "); console.log(perceptron(1.0));
+    console.log("0.1: "); console.log(perceptron(0.1));
+    console.log("0.01: "); console.log(perceptron(0.01));
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<script>
+  const { abs, random } = Math;
+  const c = 0.01;
+  const E = 0.0000001;
+
+  const pochodnaX = (x, y, z) => 4*x - 2*y - 2
+
+  const pochodnaY = (x, y, z) => 4*y - 2*x - 2*z
+
+  const pochodnaZ = (x, y, z) => 2*z - 2*y
+
+  const pochodnaX2 = (x, y) => 12*x**3 + 12 * x**2 - 24 * x
+
+  const pochodnaY2 = (x, y) => 24 * y - 24
+
+  //1.x,y,z
+  let [oldX, oldY, oldZ] = [random(), random(), random()];
+  let [newX, newY, newZ] = [0,0,0];
+  let max = 0;
+
+  while(true) {
+    newX = oldX - c * pochodnaX(oldX, oldY, oldZ);
+    newY = oldY - c * pochodnaY(oldX, oldY, oldZ);
+    newZ = oldZ - c * pochodnaZ(oldX, oldY, oldZ);
+
+    max = 0;
+
+    if(abs(newX - oldX) > max) max = abs(newX - oldX);
+    if(abs(newY - oldY) > max) max = abs(newY - oldY);
+    if(abs(newZ - oldZ) > max) max = abs(newZ - oldZ);
+    if(max < E) break;
+
+    [oldX, oldY, oldZ] = [newX, newY, newZ];
+  }
+
+  console.log('Pierwsza funkcja: ', newX, newY, newZ, 2*newX**2 + 2*newY**2 + newZ**2 - 2*newX*newY - 2*newY*newZ - 2*newX + 3);
+
+  //2.x,y
+  [oldX, oldY] = [random(), random()];
+  [newX, newY] = [0,0];
+  max = 0;
+
+  while(true) {
+    newX = oldX - c * pochodnaX2(oldX, oldY);
+    newY = oldY - c * pochodnaY2(oldX, oldY);
+
+    max = 0;
+    if(abs(newX - oldX) > max) max = abs(newX - oldX);
+    if(abs(newY - oldY) > max) max = abs(newY - oldY);
+    if(max < E) break;
+
+    [oldX, oldY] = [newX, newY];
+  }
+
+  console.log('Druga funkcja: ', newX, newY, 3*newX**4 + 4*newX**3 - 12*newX**2 + 12*newY**2 - 24*newY);
+
+</script>
